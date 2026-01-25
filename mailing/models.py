@@ -19,12 +19,20 @@ class MailingRecipient(models.Model):
     )
     comment = models.TextField(null=True, blank=True, verbose_name="Комментарий")
 
+    class Meta:
+        verbose_name = "Получатель"
+        verbose_name_plural = "Получатели"
+
 
 class Message(models.Model):
     """Модель письма для рассылки"""
 
     letter_theme = models.CharField(max_length=100, verbose_name="Тема письма", help_text="Введите тему письма")
     letter_body = models.TextField(verbose_name="Содержание письма", help_text="Введите содержание письма")
+
+    class Meta:
+        verbose_name = "Письмо"
+        verbose_name_plural = "Письма"
 
 
 class Mailing(models.Model):
