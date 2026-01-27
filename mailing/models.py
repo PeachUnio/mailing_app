@@ -97,3 +97,47 @@ class Mailing(models.Model):
     class Meta:
         verbose_name = "Рассылка"
         verbose_name_plural = "Рассылки"
+
+
+class MailingLog(models.Model):
+    """Модель для хранения логов отправки"""
+    mailing = models.ForeignKey(
+        Mailing,
+        on_delete=models.CASCADE,
+        verbose_name="Рассылка",
+        related_name='logs'
+    )
+    recipient = models.ForeignKey(
+        MailingRecipient,
+        on_delete=models.CASCADE,
+        verbose_name="Получатель"
+    )
+    attempt_time = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Дата и время попытки"
+    )
+
+    STATUS_SUCCESS = 'success'
+    STATUS_FAILED = 'failed'
+
+    STATUS_CHOICES = [
+        (STATUS_SUCCESS, 'Успешно'),
+        (STATUS_FAILED, 'Не успешно'),
+    ]
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        verbose_name="Статус"
+    )
+    server_response = models.TextField(
+        verbose_name="Ответ почтового сервера"
+    )
+
+    class Meta:
+        verbose_name = "Лог рассылки"
+        verbose_name_plural = "Логи рассылок"
+        ordering = ['-attempt_time']
+
+    def __str__(self):
+        return f"Лог #{self.id} - {self.get_status_display()}"
