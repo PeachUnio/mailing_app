@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Удаление рассылки</h1>
+
+    <div class="alert alert-danger">
+        <h4>Вы уверены, что хотите удалить рассылку #{{ object.id }}?</h4>
+        <p>Начало: {{ object.start_time|date:"d.m.Y H:i" }}</p>
+        <p>Окончание: {{ object.end_time|date:"d.m.Y H:i" }}</p>
+        <p>Получателей: {{ object.recipients.count }}</p>
+
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Да, удалить</button>
+            <a href="{% url 'mailing:mailing_list' %}" class="btn btn-secondary">Отмена</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
