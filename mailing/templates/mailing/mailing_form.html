@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2 class="my-4">
+        {% if object %}
+            Редактирование рассылки
+        {% else %}
+            Создание новой рассылки
+        {% endif %}
+    </h2>
+
+    <form method="post" class="needs-validation" novalidate>
+        {% csrf_token %}
+
+        <!-- Выводим общие ошибки формы -->
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Поля в правильном порядке -->
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="id_start_time" class="form-label">Дата и время начала:</label>
+                {{ form.start_time }}
+                {% if form.start_time.errors %}
+                    <div class="text-danger">{{ form.start_time.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label for="id_end_time" class="form-label">Дата и время окончания:</label>
+                {{ form.end_time }}
+                {% if form.end_time.errors %}
+                    <div class="text-danger">{{ form.end_time.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Сообщение -->
+        <div class="mb-3">
+            <label for="id_message" class="form-label">Сообщение:</label>
+            {{ form.message }}  <!-- Исправлено: massage → message -->
+            {% if form.message.errors %}
+                <div class="text-danger">{{ form.message.errors }}</div>
+            {% endif %}
+        </div>
+
+        <!-- Получатели -->
+        <div class="mb-4">
+            <label for="id_recipients" class="form-label">Получатели:</label>
+            {{ form.recipients }}
+            <small class="text-muted">
+                Удерживайте Ctrl (Cmd на Mac) для выбора нескольких получателей
+            </small>
+            {% if form.recipients.errors %}
+                <div class="text-danger">{{ form.recipients.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+                {% if object %}Сохранить{% else %}Создать{% endif %}
+            </button>
+            <a href="{% url 'mailing:mailing_list' %}" class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
