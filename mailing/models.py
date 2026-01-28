@@ -1,4 +1,6 @@
+from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.mail import send_mail
 from django.db import models
 from django.utils import timezone
 
@@ -19,6 +21,9 @@ class MailingRecipient(models.Model):
     )
     comment = models.TextField(null=True, blank=True, verbose_name="Комментарий")
 
+    def __str__(self):
+        return f"{self.name} <{self.email}>"
+
     class Meta:
         verbose_name = "Получатель"
         verbose_name_plural = "Получатели"
@@ -29,6 +34,9 @@ class Message(models.Model):
 
     letter_theme = models.CharField(max_length=100, verbose_name="Тема письма", help_text="Введите тему письма")
     letter_body = models.TextField(verbose_name="Содержание письма", help_text="Введите содержание письма")
+
+    def __str__(self):
+        return f"{self.letter_theme}"
 
     class Meta:
         verbose_name = "Письмо"
@@ -53,7 +61,7 @@ class Mailing(models.Model):
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_CREATED, verbose_name="Статус")
 
-    massage = models.ForeignKey(Message, on_delete=models.CASCADE, verbose_name="Сообщение для рассылки")
+    message = models.ForeignKey(Message, on_delete=models.CASCADE, verbose_name="Сообщение для рассылки")
     recipients = models.ManyToManyField(MailingRecipient, verbose_name="Получатели рассылки")
 
     @property
@@ -84,6 +92,8 @@ class Mailing(models.Model):
 
     def clean(self):
         """Валидация для проверки дат"""
+        if self.start_time is None or self.end_time is None:
+            raise ValidationError("Укажите дату и время начала и окончания рассылки")
         if self.start_time >= self.end_time:
             raise ValidationError("Дата окончания должна быть позже даты начала")
         if self.start_time < timezone.now():
@@ -94,6 +104,74 @@ class Mailing(models.Model):
         self.clean()
         super().save(*args, **kwargs)
 
+    def can_send_now(self):
+        """Проверяет, можно ли отправлять рассылку сейчас"""
+        now = timezone.now()
+        return self.start_time <= now <= self.end_time
+
+    def send_mailing(self):
+        """Отправка рассылки всем получателям"""
+        if not self.can_send_now():
+            return False, "Время рассылки не наступило или уже прошло"
+
+        success_count = 0
+        error_count = 0
+
+        for recipient in self.recipients.all():
+            try:
+                send_mail(
+                    subject=self.message.letter_theme,
+                    message=self.message.letter_body,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[recipient.email],
+                    fail_silently=False,
+                )
+
+                MailingLog.objects.create(
+                    mailing=self,
+                    recipient=recipient,
+                    status=MailingLog.STATUS_SUCCESS,
+                    server_response="Email успешно отправлен",
+                )
+                success_count += 1
+
+            except Exception as e:
+                MailingLog.objects.create(
+                    mailing=self, recipient=recipient, status=MailingLog.STATUS_FAILED, server_response=str(e)
+                )
+                error_count += 1
+
+        self.update_status()
+
+        return True, f"Отправлено успешно: {success_count}, с ошибками: {error_count}"
+
     class Meta:
         verbose_name = "Рассылка"
         verbose_name_plural = "Рассылки"
+
+
+class MailingLog(models.Model):
+    """Модель для хранения логов отправки"""
+
+    mailing = models.ForeignKey(Mailing, on_delete=models.CASCADE, verbose_name="Рассылка", related_name="logs")
+    recipient = models.ForeignKey(MailingRecipient, on_delete=models.CASCADE, verbose_name="Получатель")
+    attempt_time = models.DateTimeField(auto_now_add=True, verbose_name="Дата и время попытки")
+
+    STATUS_SUCCESS = "success"
+    STATUS_FAILED = "failed"
+
+    STATUS_CHOICES = [
+        (STATUS_SUCCESS, "Успешно"),
+        (STATUS_FAILED, "Не успешно"),
+    ]
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, verbose_name="Статус")
+    server_response = models.TextField(verbose_name="Ответ почтового сервера")
+
+    class Meta:
+        verbose_name = "Лог рассылки"
+        verbose_name_plural = "Логи рассылок"
+        ordering = ["-attempt_time"]
+
+    def __str__(self):
+        return f"Лог #{self.id} - {self.get_status_display()}"

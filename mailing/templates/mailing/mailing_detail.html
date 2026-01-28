@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Рассылка #{{ mailing.id }}</h1>
+
+<div class="card mt-4">
+    <div class="card-body">
+        <h5 class="card-title">Информация</h5>
+        <p><strong>Статус:</strong> {{ mailing.status_display }}</p>
+        <p><strong>Начало:</strong> {{ mailing.start_time }}</p>
+        <p><strong>Окончание:</strong> {{ mailing.end_time }}</p>
+        <p><strong>Сообщение:</strong> {{ mailing.message.letter_theme }}</p>
+        <p><strong>Получателей:</strong> {{ mailing.recipients.count }}</p>
+
+        {% if mailing.can_send_now %}
+            <form method="post" action="{% url 'mailing:send_mailing' mailing.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success mt-3">Запустить сейчас</button>
+            </form>
+        {% else %}
+            <div class="alert alert-warning mt-3">
+                Сейчас нельзя отправить рассылку (не входит во временной интервал)
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{% url 'mailing:mailing_list' %}" class="btn btn-secondary">Назад</a>
+    <a href="{% url 'mailing:mailing_update' mailing.pk %}" class="btn btn-warning">Редактировать</a>
+</div>
+{% endblock %}

@@ -1,0 +1,71 @@
+<!-- mailing/templates/mailing/message_form.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">
+                        {% if object %}
+                            ✏️ Редактирование сообщения
+                        {% else %}
+                            📝 Создание нового сообщения
+                        {% endif %}
+                    </h3>
+                </div>
+
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label for="{{ form.letter_theme.id_for_label }}" class="form-label fw-bold">
+                                Тема письма
+                            </label>
+                            {{ form.letter_theme }}
+                            {% if form.letter_theme.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.letter_theme.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.letter_body.id_for_label }}" class="form-label fw-bold">
+                                Содержание письма
+                            </label>
+                            {{ form.letter_body }}
+                            {% if form.letter_body.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.letter_body.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                {% if object %}Сохранить{% else %}Создать{% endif %}
+                            </button>
+                            <a href="{% url 'mailing:message_list' %}" class="btn btn-secondary">Отмена</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
