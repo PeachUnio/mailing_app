@@ -104,6 +104,11 @@ class Mailing(models.Model):
         self.clean()
         super().save(*args, **kwargs)
 
+    def can_send_now(self):
+        """Проверяет, можно ли отправлять рассылку сейчас"""
+        now = timezone.now()
+        return self.start_time <= now <= self.end_time
+
     class Meta:
         verbose_name = "Рассылка"
         verbose_name_plural = "Рассылки"
