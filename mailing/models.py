@@ -1,4 +1,6 @@
 from django.core.exceptions import ValidationError
+from django.core.mail import send_mail
+from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
@@ -19,6 +21,9 @@ class MailingRecipient(models.Model):
     )
     comment = models.TextField(null=True, blank=True, verbose_name="Комментарий")
 
+    def __str__(self):
+        return f"{self.name} <{self.email}>"
+
     class Meta:
         verbose_name = "Получатель"
         verbose_name_plural = "Получатели"
@@ -29,6 +34,9 @@ class Message(models.Model):
 
     letter_theme = models.CharField(max_length=100, verbose_name="Тема письма", help_text="Введите тему письма")
     letter_body = models.TextField(verbose_name="Содержание письма", help_text="Введите содержание письма")
+
+    def __str__(self):
+        return f"{self.letter_theme}"
 
     class Meta:
         verbose_name = "Письмо"
@@ -53,7 +61,7 @@ class Mailing(models.Model):
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_CREATED, verbose_name="Статус")
 
-    massage = models.ForeignKey(Message, on_delete=models.CASCADE, verbose_name="Сообщение для рассылки")
+    message = models.ForeignKey(Message, on_delete=models.CASCADE, verbose_name="Сообщение для рассылки")
     recipients = models.ManyToManyField(MailingRecipient, verbose_name="Получатели рассылки")
 
     @property
@@ -84,6 +92,8 @@ class Mailing(models.Model):
 
     def clean(self):
         """Валидация для проверки дат"""
+        if self.start_time is None or self.end_time is None:
+            raise ValidationError("Укажите дату и время начала и окончания рассылки")
         if self.start_time >= self.end_time:
             raise ValidationError("Дата окончания должна быть позже даты начала")
         if self.start_time < timezone.now():
