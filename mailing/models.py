@@ -96,8 +96,9 @@ class Mailing(models.Model):
             raise ValidationError("Укажите дату и время начала и окончания рассылки")
         if self.start_time >= self.end_time:
             raise ValidationError("Дата окончания должна быть позже даты начала")
-        if self.start_time < timezone.now():
-            raise ValidationError("Дата начала не может быть в прошлом")
+        if self.pk is None:
+            if self.start_time < timezone.now():
+                raise ValidationError("Дата начала не может быть в прошлом")
 
     def save(self, *args, **kwargs):
         """Автоматический вызов clean при сохранении"""
