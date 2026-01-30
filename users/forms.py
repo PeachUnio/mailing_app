@@ -39,6 +39,6 @@ class PasswordResetRequestForm(forms.Form):
 class PasswordResetConfirmForm(SetPasswordForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Кастомизация полей если нужно
+
         for field in self.fields.values():
             field.widget.attrs.update({'class': 'form-control'})

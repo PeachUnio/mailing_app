@@ -31,14 +31,12 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractUser):
-    username = None  # Отключаем username, используем email
+    username = None
     email = models.EmailField(unique=True, verbose_name='Email')
 
-    # Для подтверждения email
     token = models.CharField(max_length=32, blank=True, null=True, verbose_name='Токен')
     is_verified = models.BooleanField(default=False, verbose_name='Подтвержден')
 
-    # Для восстановления пароля
     reset_token = models.CharField(max_length=32, blank=True, null=True, verbose_name='Токен сброса пароля')
     reset_token_expires = models.DateTimeField(blank=True, null=True, verbose_name='Срок действия токена сброса')
 

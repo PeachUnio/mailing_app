@@ -51,13 +51,11 @@ class PasswordResetRequestView(FormView):
         email = form.cleaned_data['email']
         user = User.objects.get(email=email)
 
-        # Генерируем токен
         token = secrets.token_hex(16)
         user.reset_token = token
-        user.reset_token_expires = timezone.now() + timedelta(hours=24)  # Токен действует 24 часа
+        user.reset_token_expires = timezone.now() + timedelta(hours=24)
         user.save()
 
-        # Отправляем email
         host = self.request.get_host()
         reset_url = f"https://{host}/users/password-reset-confirm/{token}/"
 
@@ -81,7 +79,6 @@ class PasswordResetConfirmView(FormView):
         self.token = kwargs.get('token')
         self.user = get_object_or_404(User, reset_token=self.token)
 
-        # Проверяем срок действия токена
         if (self.user.reset_token_expires and
                 self.user.reset_token_expires < timezone.now()):
             messages.error(request, 'Срок действия ссылки истек.')
@@ -97,7 +94,6 @@ class PasswordResetConfirmView(FormView):
     def form_valid(self, form):
         user = form.save()
 
-        # Очищаем токен после использования
         user.reset_token = None
         user.reset_token_expires = None
         user.save()
