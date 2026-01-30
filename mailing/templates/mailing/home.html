@@ -31,8 +31,9 @@
         </div>
     </div>
 </div>
-
+{% if user.is_authenticated %}
 <div class="mt-4">
     <a href="{% url 'mailing:mailing_create' %}" class="btn btn-primary">Создать рассылку</a>
 </div>
+{% endif %}
 {% endblock %}

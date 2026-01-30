@@ -3,13 +3,13 @@ from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.utils import timezone
-from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView, TemplateView
 
 from .forms import MailingForm, MessageForm, RecipientForm
 from .models import Mailing, MailingLog, MailingRecipient, Message
 
 
-class HomeView(ListView):
+class HomeView(TemplateView):
     template_name = "mailing/home.html"
     model = Mailing
 

@@ -10,10 +10,24 @@
         <div class="container">
             <a class="navbar-brand" href="{% url 'mailing:home' %}">Рассылки</a>
             <div class="navbar-nav">
+                {% if user.is_authenticated %}
                 <a class="nav-link" href="{% url 'mailing:home' %}">Главная</a>
                 <a class="nav-link" href="{% url 'mailing:mailing_list' %}">Рассылки</a>
                 <a class="nav-link" href="{% url 'mailing:message_list' %}">Сообщения</a>
                 <a class="nav-link" href="{% url 'mailing:recipient_list' %}">Получатели</a>
+                {% endif %}
+                {% if user.is_authenticated %}
+                <form method="post" action="{% url 'users:logout' %}">
+                    {% csrf_token %}
+                    <button type="submit"
+                            class="nav-link btn btn-link p-0">
+                        Выход
+                    </button>
+                </form>
+                {% else %}
+                <a href="{% url 'users:login' %}" class="nav-link text-white">Вход</a>
+                <a href="{% url 'users:register' %}" class="nav-link text-white">Регистрация</a>
+                {% endif %}
             </div>
         </div>
     </nav>
