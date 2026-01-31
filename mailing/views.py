@@ -1,3 +1,4 @@
+from django.core.exceptions import PermissionDenied
 from django.contrib import messages
 from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect, render
@@ -140,6 +141,13 @@ class MessageCreateView(CreateView):
     template_name = "mailing/message_form.html"
     success_url = reverse_lazy("mailing:message_list")
 
+    def form_valid(self, form):
+        message = form.save()
+        user = self.request.user
+        message.owner = user
+        message.save()
+        return super().form_valid(form)
+
 
 class MessageUpdateView(UpdateView):
     model = Message
@@ -165,6 +173,13 @@ class RecipientCreateView(CreateView):
     form_class = RecipientForm
     template_name = "mailing/recipient_form.html"
     success_url = reverse_lazy("mailing:recipient_list")
+
+    def form_valid(self, form):
+        recipient = form.save()
+        user = self.request.user
+        recipient.owner = user
+        recipient.save()
+        return super().form_valid(form)
 
 
 class RecipientUpdateView(UpdateView):
