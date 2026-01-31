@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.db import models
 from django.utils import timezone
+from users.models import User
 
 
 class MailingRecipient(models.Model):
@@ -20,6 +21,7 @@ class MailingRecipient(models.Model):
         help_text="Введите ФИО получателя",
     )
     comment = models.TextField(null=True, blank=True, verbose_name="Комментарий")
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name="Владелец", blank=True, null=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         return f"{self.name} <{self.email}>"
@@ -34,6 +36,7 @@ class Message(models.Model):
 
     letter_theme = models.CharField(max_length=100, verbose_name="Тема письма", help_text="Введите тему письма")
     letter_body = models.TextField(verbose_name="Содержание письма", help_text="Введите содержание письма")
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name="Владелец", blank=True, null=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         return f"{self.letter_theme}"
@@ -52,14 +55,17 @@ class Mailing(models.Model):
     STATUS_CREATED = "created"
     STATUS_RUNNING = "running"
     STATUS_COMPLETED = "completed"
+    STATUS_DISABLED = "disabled"
 
     STATUS_CHOICES = [
         (STATUS_CREATED, "Создана"),
         (STATUS_RUNNING, "Запущена"),
         (STATUS_COMPLETED, "Завершена"),
+        (STATUS_DISABLED, "Отключена")
     ]
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_CREATED, verbose_name="Статус")
+    is_active = models.BooleanField(default=True, verbose_name='Активна')
 
     message = models.ForeignKey(Message, on_delete=models.CASCADE, verbose_name="Сообщение для рассылки")
     recipients = models.ManyToManyField(MailingRecipient, verbose_name="Получатели рассылки")
@@ -149,6 +155,10 @@ class Mailing(models.Model):
     class Meta:
         verbose_name = "Рассылка"
         verbose_name_plural = "Рассылки"
+        permissions = [
+            ("can_view_all_mailings", "Может просматривать все рассылки"),
+            ("can_disable_mailing", "Может отключать рассылки"),
+        ]
 
 
 class MailingLog(models.Model):
