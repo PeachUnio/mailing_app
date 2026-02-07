@@ -23,19 +23,23 @@
             </thead>
             <tbody>
                 {% for recipient in object_list %}
-                <tr>
-                    <td>{{ recipient.id }}</td>
-                    <td>{{ recipient.name }}</td>
-                    <td>{{ recipient.email }}</td>
-                    <td>{{ recipient.comment|truncatechars:30 }}</td>
-                    <td>
-                        <a href="{% url 'mailing:recipient_update' recipient.pk %}"
-                           class="btn btn-sm btn-warning">Редактировать</a>
-                        <a href="{% url 'mailing:recipient_delete' recipient.pk %}"
-                           class="btn btn-sm btn-danger"
-                           onclick="return confirm('Удалить получателя?')">Удалить</a>
-                    </td>
-                </tr>
+                    {% if perms.mailing.can_view_all_mailings or user == recipient.owner %}
+                    <tr>
+                        <td>{{ recipient.id }}</td>
+                        <td>{{ recipient.name }}</td>
+                        <td>{{ recipient.email }}</td>
+                        <td>{{ recipient.comment|truncatechars:30 }}</td>
+                        <td>
+                            {% if user == recipient.owner %}
+                            <a href="{% url 'mailing:recipient_update' recipient.pk %}"
+                               class="btn btn-sm btn-warning">Редактировать</a>
+                            <a href="{% url 'mailing:recipient_delete' recipient.pk %}"
+                               class="btn btn-sm btn-danger"
+                               onclick="return confirm('Удалить получателя?')">Удалить</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
                 {% endfor %}
             </tbody>
         </table>
