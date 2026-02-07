@@ -21,7 +21,7 @@ class MailingRecipient(models.Model):
         help_text="Введите ФИО получателя",
     )
     comment = models.TextField(null=True, blank=True, verbose_name="Комментарий")
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name="Владелец", blank=True, null=True, on_delete=models.SET_NULL)
+    owner = models.ForeignKey(User, verbose_name="Владелец", blank=True, null=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         return f"{self.name} <{self.email}>"
@@ -36,7 +36,7 @@ class Message(models.Model):
 
     letter_theme = models.CharField(max_length=100, verbose_name="Тема письма", help_text="Введите тему письма")
     letter_body = models.TextField(verbose_name="Содержание письма", help_text="Введите содержание письма")
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name="Владелец", blank=True, null=True, on_delete=models.SET_NULL)
+    owner = models.ForeignKey(User, verbose_name="Владелец", blank=True, null=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         return f"{self.letter_theme}"
@@ -51,6 +51,7 @@ class Mailing(models.Model):
 
     start_time = models.DateTimeField(verbose_name="Дата начала рассылки")
     end_time = models.DateTimeField(verbose_name="Дата конца рассылки")
+    owner = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE)
 
     STATUS_CREATED = "created"
     STATUS_RUNNING = "running"
