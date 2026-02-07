@@ -21,18 +21,22 @@
             </thead>
             <tbody>
                 {% for message in object_list %}
-                <tr>
-                    <td>{{ message.id }}</td>
-                    <td><strong>{{ message.letter_theme }}</strong></td>
-                    <td>{{ message.letter_body|truncatechars:50 }}</td>
-                    <td>
-                        <a href="{% url 'mailing:message_update' message.pk %}"
-                           class="btn btn-sm btn-warning">Редактировать</a>
-                        <a href="{% url 'mailing:message_delete' message.pk %}"
-                           class="btn btn-sm btn-danger"
-                           onclick="return confirm('Удалить сообщение?')">Удалить</a>
-                    </td>
-                </tr>
+                    {% if perms.mailing.can_view_all_mailings or user == message.owner %}
+                    <tr>
+                        <td>{{ message.id }}</td>
+                        <td><strong>{{ message.letter_theme }}</strong></td>
+                        <td>{{ message.letter_body|truncatechars:50 }}</td>
+                        <td>
+                            {% if user == message.owner %}
+                            <a href="{% url 'mailing:message_update' message.pk %}"
+                               class="btn btn-sm btn-warning">Редактировать</a>
+                            <a href="{% url 'mailing:message_delete' message.pk %}"
+                               class="btn btn-sm btn-danger"
+                               onclick="return confirm('Удалить сообщение?')">Удалить</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
                 {% endfor %}
             </tbody>
         </table>
