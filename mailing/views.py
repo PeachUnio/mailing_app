@@ -12,23 +12,54 @@ from .models import Mailing, MailingLog, MailingRecipient, Message
 
 class HomeView(TemplateView):
     template_name = "mailing/home.html"
-    model = Mailing
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         now = timezone.now()
+        user = self.request.user
 
-        context["total_mailings"] = Mailing.objects.count()
-        context["active_mailings"] = Mailing.objects.filter(
-            start_time__lte=now, end_time__gte=now, status=Mailing.STATUS_RUNNING
-        ).count()
-        context["unique_recipients"] = MailingRecipient.objects.count()
+        if user.is_authenticated:
+            is_manager = user.has_perm('mailing.can_view_all_mailings')
 
-        context["latest_mailings"] = Mailing.objects.order_by("-start_time")[:5]
+            if is_manager:
+                mailings_qs = Mailing.objects.all()
+                recipients_qs = MailingRecipient.objects.all()
+            else:
+                mailings_qs = Mailing.objects.filter(owner=user)
+                recipients_qs = MailingRecipient.objects.filter(owner=user)
 
-        context["recent_logs"] = MailingLog.objects.select_related("mailing", "recipient").order_by("-attempt_time")[
-            :10
-        ]
+            context["total_mailings"] = mailings_qs.count()
+            context["user_total_mailings"] = mailings_qs.count()
+
+            context["active_mailings"] = mailings_qs.filter(
+                start_time__lte=now,
+                end_time__gte=now,
+                status=Mailing.STATUS_RUNNING,
+                is_active=True
+            ).count()
+            context["user_active_mailings"] = context["active_mailings"]
+
+            context["unique_recipients"] = recipients_qs.distinct().count()
+            context["user_recipients"] = recipients_qs.distinct().count()
+
+            context["latest_mailings"] = mailings_qs.order_by("-start_time")[:5]
+
+            if is_manager:
+                context["recent_logs"] = MailingLog.objects.select_related(
+                    "mailing", "recipient"
+                ).order_by("-attempt_time")[:10]
+            else:
+                context["recent_logs"] = MailingLog.objects.filter(
+                    mailing__in=mailings_qs
+                ).select_related("mailing", "recipient").order_by("-attempt_time")[:10]
+
+        else:
+            context["total_mailings"] = 0
+            context["active_mailings"] = 0
+            context["unique_recipients"] = 0
+            context["user_total_mailings"] = 0
+            context["user_active_mailings"] = 0
+            context["user_recipients"] = 0
 
         return context
 
@@ -61,6 +92,10 @@ class MailingCreateView(CreateView):
 
     def form_valid(self, form):
         messages.success(self.request, "Рассылка успешно создана!")
+        mailing = form.save()
+        user = self.request.user
+        mailing.owner = user
+        mailing.save()
         return super().form_valid(form)
 
 
