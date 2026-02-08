@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.db import models
 from django.utils import timezone
+
 from users.models import User
 
 
@@ -62,11 +63,11 @@ class Mailing(models.Model):
         (STATUS_CREATED, "Создана"),
         (STATUS_RUNNING, "Запущена"),
         (STATUS_COMPLETED, "Завершена"),
-        (STATUS_DISABLED, "Отключена")
+        (STATUS_DISABLED, "Отключена"),
     ]
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_CREATED, verbose_name="Статус")
-    is_active = models.BooleanField(default=True, verbose_name='Активна')
+    is_active = models.BooleanField(default=True, verbose_name="Активна")
 
     message = models.ForeignKey(Message, on_delete=models.CASCADE, verbose_name="Сообщение для рассылки")
     recipients = models.ManyToManyField(MailingRecipient, verbose_name="Получатели рассылки")

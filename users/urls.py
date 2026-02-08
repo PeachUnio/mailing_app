@@ -1,7 +1,10 @@
 from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import path
+from django.views.decorators.cache import cache_page
+
 from users.apps import UsersConfig
-from users.views import UserCreateView, email_verification, PasswordResetRequestView, PasswordResetConfirmView, UserListView, ToggleUserActiveView
+from users.views import (PasswordResetConfirmView, PasswordResetRequestView, ToggleUserActiveView, UserCreateView,
+                         UserListView, email_verification)
 
 app_name = UsersConfig.name
 
@@ -12,6 +15,6 @@ urlpatterns = [
     path("email-confirm/<str:token>/", email_verification, name="email-confirm"),
     path("password-reset/", PasswordResetRequestView.as_view(), name="password-reset"),
     path("password-reset-confirm/<str:token>/", PasswordResetConfirmView.as_view(), name="password-reset-confirm"),
-    path("list/", UserListView.as_view(), name="user_list"),
+    path("list/", cache_page(60 * 15)(UserListView.as_view()), name="user_list"),
     path("toggle-active/<int:pk>/", ToggleUserActiveView.as_view(), name="toggle_user_active"),
 ]
