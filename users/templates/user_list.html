@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Список пользователей</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Email</th>
+            <th>Имя</th>
+            <th>Дата регистрации</th>
+            <th>Статус</th>
+            <th>Действие</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.email }}</td>
+            <td>
+                {% if user.first_name or user.last_name %}
+                    {{ user.first_name }} {{ user.last_name }}
+                {% else %}
+                    —
+                {% endif %}
+            </td>
+            <td>{{ user.date_joined|date:"d.m.Y" }}</td>
+            <td>
+                {% if user.is_active %}
+                    <span class="badge bg-success">Активен</span>
+                {% else %}
+                    <span class="badge bg-danger">Заблокирован</span>
+                {% endif %}
+            </td>
+            <td>
+                <form method="post" action="{% url 'users:toggle_user_active' user.pk %}">
+                    {% csrf_token %}
+                    {% if user.is_active %}
+                        <button type="submit" class="btn btn-sm btn-danger">
+                            Заблокировать
+                        </button>
+                    {% else %}
+                        <button type="submit" class="btn btn-sm btn-success">
+                            Разблокировать
+                        </button>
+                    {% endif %}
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
