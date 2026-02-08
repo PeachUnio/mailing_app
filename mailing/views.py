@@ -6,7 +6,7 @@ from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView, TemplateView
 
-from .forms import MailingForm, MessageForm, RecipientForm
+from .forms import MailingForm, MailingModerForm, MessageForm, RecipientForm
 from .models import Mailing, MailingLog, MailingRecipient, Message
 
 
@@ -110,6 +110,14 @@ class MailingUpdateView(UpdateView):
         context["all_messages"] = Message.objects.all()
         context["all_recipients"] = MailingRecipient.objects.all()
         return context
+
+    def get_form_class(self):
+        user = self.request.user
+        if user == self.object.owner:
+            return MailingForm
+        if user.has_perm("mailing.can_view_all_mailings") and user.has_perm("mailing.can_disable_mailing"):
+            return MailingModerForm
+        raise PermissionDenied
 
     def form_valid(self, form):
         messages.success(self.request, "Рассылка успешно обновлена!")
