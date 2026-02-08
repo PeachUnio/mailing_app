@@ -7,8 +7,25 @@
     <div class="col-md-4">
         <div class="card text-white bg-primary">
             <div class="card-body">
-                <h5 class="card-title">Всего рассылок</h5>
-                <h2>{{ total_mailings }}</h2>
+                <h5 class="card-title">
+                    {% if perms.mailing.can_view_all_mailings %}
+                        Всего рассылок
+                    {% else %}
+                        Мои рассылки
+                    {% endif %}
+                </h5>
+
+                {% if user.is_authenticated %}
+                    <h2>{{ total_mailings }}</h2>
+                    {% if perms.mailing.can_view_all_mailings %}
+                        <small class="opacity-75">в системе</small>
+                    {% else %}
+                        <small class="opacity-75">создано мной</small>
+                    {% endif %}
+                {% else %}
+                    <h2>—</h2>
+                    <small class="opacity-75">Войдите для просмотра</small>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -16,8 +33,26 @@
     <div class="col-md-4">
         <div class="card text-white bg-success">
             <div class="card-body">
-                <h5 class="card-title">Активных рассылок</h5>
-                <h2>{{ active_mailings }}</h2>
+                <h5 class="card-title">
+                    {% if perms.mailing.can_view_all_mailings %}
+                        Активных рассылок
+                    {% else %}
+                        Мои активные
+                    {% endif %}
+                </h5>
+
+                {% if user.is_authenticated %}
+                    {% if perms.mailing.can_view_all_mailings %}
+                        <h2>{{ active_mailings }}</h2>
+                        <small class="opacity-75">запущено в системе</small>
+                    {% else %}
+                        <h2>{{ user_active_mailings }}</h2>
+                        <small class="opacity-75">мои запущенные</small>
+                    {% endif %}
+                {% else %}
+                    <h2>—</h2>
+                    <small class="opacity-75">Войдите для просмотра</small>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -25,15 +60,104 @@
     <div class="col-md-4">
         <div class="card text-white bg-info">
             <div class="card-body">
-                <h5 class="card-title">Уникальных получателей</h5>
-                <h2>{{ unique_recipients }}</h2>
+                <h5 class="card-title">
+                    {% if perms.mailing.can_view_all_mailings %}
+                        Уникальных получателей
+                    {% else %}
+                        Мои получатели
+                    {% endif %}
+                </h5>
+
+                {% if user.is_authenticated %}
+                    {% if perms.mailing.can_view_all_mailings %}
+                        <h2>{{ unique_recipients }}</h2>
+                        <small class="opacity-75">всего в системе</small>
+                    {% else %}
+                        <h2>{{ user_recipients }}</h2>
+                        <small class="opacity-75">добавлено мной</small>
+                    {% endif %}
+                {% else %}
+                    <h2>—</h2>
+                    <small class="opacity-75">Войдите для просмотра</small>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
+
 {% if user.is_authenticated %}
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    {% if perms.mailing.can_view_all_mailings %}
+                        Последние рассылки
+                    {% else %}
+                        Мои последние рассылки
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if latest_mailings %}
+                    <div class="list-group">
+                        {% for mailing in latest_mailings %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ mailing.message.letter_theme }}</h6>
+                                <small class="text-muted">{{ mailing.start_time|date:"d.m.Y H:i" }}</small>
+                            </div>
+                            <p class="mb-1">Статус: {{ mailing.get_status_display }}</p>
+                            <small>Получателей: {{ mailing.recipients.count }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">Нет рассылок</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Последние события</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_logs %}
+                    <div class="list-group">
+                        {% for log in recent_logs %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ log.mailing.message.letter_theme }}</h6>
+                                <small class="text-muted">{{ log.attempt_time|date:"H:i" }}</small>
+                            </div>
+                            <p class="mb-1">
+                                {% if log.status == 'success' %}
+                                    <span class="badge bg-success">Успешно</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Ошибка</span>
+                                {% endif %}
+                                → {{ log.recipient.email }}
+                            </p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">Нет событий</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if not perms.mailing.can_view_all_mailings %}
 <div class="mt-4">
     <a href="{% url 'mailing:mailing_create' %}" class="btn btn-primary">Создать рассылку</a>
 </div>
 {% endif %}
+
+{% endif %}
+
 {% endblock %}

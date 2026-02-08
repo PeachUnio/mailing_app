@@ -23,26 +23,34 @@
                 </thead>
                 <tbody>
                     {% for mailing in mailings %}
-                    <tr>
-                        <td>{{ mailing.id }}</td>
-                        <td>{{ mailing.start_time|date:"d.m.Y H:i" }}</td>
-                        <td>{{ mailing.end_time|date:"d.m.Y H:i" }}</td>
-                        <td>
-                            <span class="badge bg-{{ mailing.dynamic_status }}">
-                                {{ mailing.status_display }}
-                            </span>
-                        </td>
-                        <td>{{ mailing.recipients.count }}</td>
-                        <td>
-                            <a href="{% url 'mailing:mailing_detail' mailing.pk %}"
-                               class="btn btn-sm btn-info">Просмотр</a>
-                            <a href="{% url 'mailing:mailing_update' mailing.pk %}"
-                               class="btn btn-sm btn-warning">Редактировать</a>
-                            <a href="{% url 'mailing:mailing_delete' mailing.pk %}"
-                               class="btn btn-sm btn-danger"
-                               onclick="return confirm('Удалить рассылку?')">Удалить</a>
-                        </td>
-                    </tr>
+                        {% if perms.mailing.can_view_all_mailings or user == mailing.owner %}
+                        <tr>
+                            <td>{{ mailing.id }}</td>
+                            <td>{{ mailing.start_time|date:"d.m.Y H:i" }}</td>
+                            <td>{{ mailing.end_time|date:"d.m.Y H:i" }}</td>
+                            <td>
+                                <span class="badge bg-{{ mailing.status }}">
+                                    {{ mailing.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ mailing.recipients.count }}</td>
+                            <td>
+                                {% if user == mailing.owner %}
+                                <a href="{% url 'mailing:mailing_detail' mailing.pk %}"
+                                   class="btn btn-sm btn-info">Просмотр</a>
+                                {% endif %}
+                                {% if perms.mailing.can_disable_mailing or user == mailing.owner %}
+                                <a href="{% url 'mailing:mailing_update' mailing.pk %}"
+                                   class="btn btn-sm btn-warning">Редактировать</a>
+                                {% endif %}
+                                {% if user == mailing.owner %}
+                                <a href="{% url 'mailing:mailing_delete' mailing.pk %}"
+                                   class="btn btn-sm btn-danger"
+                                   onclick="return confirm('Удалить рассылку?')">Удалить</a>
+                                 {% endif %}
+                            </td>
+                        </tr>
+                        {% endif %}
                     {% endfor %}
                 </tbody>
             </table>
@@ -58,5 +66,6 @@
     .badge.bg-created { background-color: #6c757d; }
     .badge.bg-running { background-color: #198754; }
     .badge.bg-completed { background-color: #0dcaf0; }
+    .badge.bg-disabled { background-color: #dc3545; }
 </style>
 {% endblock %}

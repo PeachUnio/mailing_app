@@ -5,7 +5,7 @@ from .models import Mailing, Message, MailingRecipient
 class MailingForm(forms.ModelForm):
     class Meta:
         model = Mailing
-        fields = ['start_time', 'end_time', 'message', 'recipients']  # Исправлено: massage → message
+        fields = ['start_time', 'end_time', 'message', 'recipients']
         widgets = {
             'start_time': forms.DateTimeInput(
                 attrs={'type': 'datetime-local', 'class': 'form-control'}
@@ -13,11 +13,11 @@ class MailingForm(forms.ModelForm):
             'end_time': forms.DateTimeInput(
                 attrs={'type': 'datetime-local', 'class': 'form-control'}
             ),
-            'message': forms.Select(attrs={'class': 'form-control'}),  # Исправлено
+            'message': forms.Select(attrs={'class': 'form-control'}),
             'recipients': forms.SelectMultiple(attrs={'class': 'form-control'}),
         }
         labels = {
-            'message': 'Сообщение для рассылки',  # Исправлено
+            'message': 'Сообщение для рассылки',
             'recipients': 'Получатели',
         }
         help_texts = {
@@ -26,9 +26,7 @@ class MailingForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Опционально: загружаем все доступные сообщения
         self.fields['message'].queryset = Message.objects.all()
-        # Загружаем всех получателей
         self.fields['recipients'].queryset = MailingRecipient.objects.all()
 
     def clean(self):
@@ -73,3 +71,25 @@ class RecipientForm(forms.ModelForm):
                 attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Дополнительная информация'}
             ),
         }
+
+class MailingModerForm(forms.ModelForm):
+    class Meta:
+        model = Mailing
+        fields = ["status"]
+
+        widgets = {
+            'status': forms.Select(attrs={'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields['status'].choices = [
+            (Mailing.STATUS_RUNNING, "Запущена"),
+            (Mailing.STATUS_DISABLED, "Отключена"),
+        ]
+        self.fields['status'].help_text = "Менеджер может только отключать рассылки"
+
+    def clean_status(self):
+        status = self.cleaned_data.get('status')
+        return status
