@@ -15,6 +15,9 @@
                 <a class="nav-link" href="{% url 'mailing:mailing_list' %}">Рассылки</a>
                 <a class="nav-link" href="{% url 'mailing:message_list' %}">Сообщения</a>
                 <a class="nav-link" href="{% url 'mailing:recipient_list' %}">Получатели</a>
+                {% if perms.mailing.can_view_all_mailings %}
+                <a class="nav-link" href="{% url 'users:user_list' %}">Пользователи</a>
+                {% endif %}
                 {% endif %}
                 {% if user.is_authenticated %}
                 <form method="post" action="{% url 'users:logout' %}">
