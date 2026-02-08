@@ -1,10 +1,10 @@
-from django.core.exceptions import PermissionDenied
 from django.contrib import messages
+from django.core.exceptions import PermissionDenied
 from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.utils import timezone
-from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView, TemplateView
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
 
 from .forms import MailingForm, MailingModerForm, MessageForm, RecipientForm
 from .models import Mailing, MailingLog, MailingRecipient, Message
@@ -19,7 +19,7 @@ class HomeView(TemplateView):
         user = self.request.user
 
         if user.is_authenticated:
-            is_manager = user.has_perm('mailing.can_view_all_mailings')
+            is_manager = user.has_perm("mailing.can_view_all_mailings")
 
             if is_manager:
                 mailings_qs = Mailing.objects.all()
@@ -32,10 +32,7 @@ class HomeView(TemplateView):
             context["user_total_mailings"] = mailings_qs.count()
 
             context["active_mailings"] = mailings_qs.filter(
-                start_time__lte=now,
-                end_time__gte=now,
-                status=Mailing.STATUS_RUNNING,
-                is_active=True
+                start_time__lte=now, end_time__gte=now, status=Mailing.STATUS_RUNNING, is_active=True
             ).count()
             context["user_active_mailings"] = context["active_mailings"]
 
@@ -45,13 +42,15 @@ class HomeView(TemplateView):
             context["latest_mailings"] = mailings_qs.order_by("-start_time")[:5]
 
             if is_manager:
-                context["recent_logs"] = MailingLog.objects.select_related(
-                    "mailing", "recipient"
-                ).order_by("-attempt_time")[:10]
+                context["recent_logs"] = MailingLog.objects.select_related("mailing", "recipient").order_by(
+                    "-attempt_time"
+                )[:10]
             else:
-                context["recent_logs"] = MailingLog.objects.filter(
-                    mailing__in=mailings_qs
-                ).select_related("mailing", "recipient").order_by("-attempt_time")[:10]
+                context["recent_logs"] = (
+                    MailingLog.objects.filter(mailing__in=mailings_qs)
+                    .select_related("mailing", "recipient")
+                    .order_by("-attempt_time")[:10]
+                )
 
         else:
             context["total_mailings"] = 0
