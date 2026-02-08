@@ -92,7 +92,8 @@ class Mailing(models.Model):
     def update_status(self):
         """Обновляет статический статус в БД на основе динамического"""
         dynamic_status = self.dynamic_status
-
+        if self.status == self.STATUS_DISABLED:
+            return
         if self.status != dynamic_status:
             self.status = dynamic_status
             self.save(update_fields=["status"])
