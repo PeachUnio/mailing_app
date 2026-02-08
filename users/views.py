@@ -4,9 +4,10 @@ from datetime import timedelta
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy, reverse
-from django.views.generic import CreateView, FormView
+from django.views.generic import CreateView, FormView, View, ListView
 from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmView
 from django.core.mail import send_mail
+from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
 
 from .forms import UserRegisterForm, PasswordResetRequestForm, PasswordResetConfirmForm
 from .models import User
@@ -100,3 +101,31 @@ class PasswordResetConfirmView(FormView):
 
         messages.success(self.request, 'Пароль успешно изменен. Теперь вы можете войти с новым паролем.')
         return super().form_valid(form)
+
+class UserListView(PermissionRequiredMixin, ListView):
+    model = User
+    template_name = "user_list.html"
+    permission_required = 'mailing.can_view_all_mailings'
+    context_object_name = 'users'
+
+    def get_queryset(self):
+        return User.objects.filter(is_superuser=False).order_by('-date_joined')
+
+
+class ToggleUserActiveView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = 'mailing.can_disable_mailing'
+
+    def post(self, request, pk):
+        user = get_object_or_404(User, pk=pk)
+
+        if user == request.user:
+            messages.error(request, "Вы не можете заблокировать себя")
+            return redirect('users:user_list')
+
+        user.is_active = not user.is_active
+        user.save()
+
+        action = "заблокирован" if not user.is_active else "разблокирован"
+        messages.success(request, f"Пользователь {user.email} {action}")
+
+        return redirect('users:user_list')
