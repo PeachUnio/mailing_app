@@ -71,3 +71,25 @@ class RecipientForm(forms.ModelForm):
                 attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Дополнительная информация'}
             ),
         }
+
+class MailingModerForm(forms.ModelForm):
+    class Meta:
+        model = Mailing
+        fields = ["status"]
+
+        widgets = {
+            'status': forms.Select(attrs={'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields['status'].choices = [
+            (Mailing.STATUS_RUNNING, "Запущена"),
+            (Mailing.STATUS_DISABLED, "Отключена"),
+        ]
+        self.fields['status'].help_text = "Менеджер может только отключать рассылки"
+
+    def clean_status(self):
+        status = self.cleaned_data.get('status')
+        return status
