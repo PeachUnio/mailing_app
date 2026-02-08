@@ -1,8 +1,10 @@
 from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import path
 from django.views.decorators.cache import cache_page
+
 from users.apps import UsersConfig
-from users.views import UserCreateView, email_verification, PasswordResetRequestView, PasswordResetConfirmView, UserListView, ToggleUserActiveView
+from users.views import (PasswordResetConfirmView, PasswordResetRequestView, ToggleUserActiveView, UserCreateView,
+                         UserListView, email_verification)
 
 app_name = UsersConfig.name
 

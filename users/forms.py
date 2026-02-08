@@ -1,10 +1,12 @@
-from django import forms
-from django.contrib.auth.forms import UserCreationForm, PasswordResetForm, SetPasswordForm
-from django.core.exceptions import ValidationError
-from users.models import User
-from django.forms import ModelForm, BooleanField
-from django.utils import timezone
 from datetime import timedelta
+
+from django import forms
+from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm, UserCreationForm
+from django.core.exceptions import ValidationError
+from django.forms import BooleanField, ModelForm
+from django.utils import timezone
+
+from users.models import User
 
 
 class StyleFormMixin:
@@ -25,14 +27,13 @@ class UserRegisterForm(StyleFormMixin, UserCreationForm):
 
 class PasswordResetRequestForm(forms.Form):
     email = forms.EmailField(
-        label='Email',
-        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Введите ваш email'})
+        label="Email", widget=forms.EmailInput(attrs={"class": "form-control", "placeholder": "Введите ваш email"})
     )
 
     def clean_email(self):
-        email = self.cleaned_data.get('email')
+        email = self.cleaned_data.get("email")
         if not User.objects.filter(email=email).exists():
-            raise ValidationError('Пользователь с таким email не найден')
+            raise ValidationError("Пользователь с таким email не найден")
         return email
 
 
@@ -41,4 +42,4 @@ class PasswordResetConfirmForm(SetPasswordForm):
         super().__init__(*args, **kwargs)
 
         for field in self.fields.values():
-            field.widget.attrs.update({'class': 'form-control'})
+            field.widget.attrs.update({"class": "form-control"})
