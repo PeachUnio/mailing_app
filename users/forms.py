@@ -68,3 +68,24 @@ class PasswordResetConfirmForm(SetPasswordForm):
 
         for field in self.fields.values():
             field.widget.attrs.update({"class": "form-control"})
+
+
+class UserUpdateForm(forms.ModelForm):
+    """Форма для редактирования профиля (без паролей!)"""
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'avatar', 'phone', 'country']
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'country': forms.TextInput(attrs={'class': 'form-control'}),
+            'avatar': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+        }
+        labels = {
+            'first_name': 'Имя',
+            'last_name': 'Фамилия',
+            'avatar': 'Аватар',
+            'phone': 'Телефон',
+            'country': 'Страна',
+        }
