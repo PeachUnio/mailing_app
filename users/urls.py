@@ -19,4 +19,5 @@ urlpatterns = [
     path("toggle-active/<int:pk>/", ToggleUserActiveView.as_view(), name="toggle_user_active"),
     # станица пользователя
     path("<int:pk>/", ProfileView.as_view(), name="profile"),
+    path('update/<int:pk>/', ProfileUpdateView.as_view(), name='profile_update')
 ]
