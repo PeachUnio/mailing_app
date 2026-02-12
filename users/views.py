@@ -12,7 +12,7 @@ from django.views.generic import CreateView, FormView, ListView, View, DetailVie
 
 from config.settings import EMAIL_HOST_USER
 
-from .forms import PasswordResetConfirmForm, PasswordResetRequestForm, UserRegisterForm
+from .forms import PasswordResetConfirmForm, PasswordResetRequestForm, UserRegisterForm, UserUpdateForm
 from .models import User
 
 
@@ -137,3 +137,17 @@ class ToggleUserActiveView(LoginRequiredMixin, PermissionRequiredMixin, View):
 class ProfileView(DetailView):
     model = User
     template_name = "user_detail.html"
+
+
+class ProfileUpdateView(UpdateView):
+    model = User
+    from_class = UserUpdateForm
+    fields = ['first_name', 'last_name', 'avatar', 'phone', 'country']
+    template_name = "profile_update.html"
+    success_url = reverse_lazy("users:profile")
+
+    def get_object(self):
+        return self.request.user
+
+    def get_success_url(self):
+        return reverse_lazy("users:profile", kwargs={'pk': self.object.pk})
