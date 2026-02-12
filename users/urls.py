@@ -4,7 +4,7 @@ from django.views.decorators.cache import cache_page
 
 from users.apps import UsersConfig
 from users.views import (PasswordResetConfirmView, PasswordResetRequestView, ToggleUserActiveView, UserCreateView,
-                         UserListView, email_verification)
+                         UserListView, email_verification, ProfileView, ProfileUpdateView)
 
 app_name = UsersConfig.name
 
@@ -17,4 +17,6 @@ urlpatterns = [
     path("password-reset-confirm/<str:token>/", PasswordResetConfirmView.as_view(), name="password-reset-confirm"),
     path("list/", cache_page(60 * 15)(UserListView.as_view()), name="user_list"),
     path("toggle-active/<int:pk>/", ToggleUserActiveView.as_view(), name="toggle_user_active"),
+    # станица пользователя
+    path("<int:pk>/", ProfileView.as_view(), name="profile"),
 ]
