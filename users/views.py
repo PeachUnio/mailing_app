@@ -8,7 +8,7 @@ from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
-from django.views.generic import CreateView, FormView, ListView, View
+from django.views.generic import CreateView, FormView, ListView, View, DetailView, UpdateView
 
 from config.settings import EMAIL_HOST_USER
 
@@ -132,3 +132,8 @@ class ToggleUserActiveView(LoginRequiredMixin, PermissionRequiredMixin, View):
         messages.success(request, f"Пользователь {user.email} {action}")
 
         return redirect("users:user_list")
+
+
+class ProfileView(DetailView):
+    model = User
+    template_name = "user_detail.html"
