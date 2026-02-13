@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect, render
@@ -235,3 +236,26 @@ class RecipientDeleteView(DeleteView):
     model = MailingRecipient
     template_name = "mailing/recipient_confirm_delete.html"
     success_url = reverse_lazy("mailing:recipient_list")
+
+
+class MailingLogListView(LoginRequiredMixin, ListView):
+    model = MailingLog
+    template_name = "mailing/mailing_log_list.html"
+    context_object_name = "logs"
+
+    def get_queryset(self):
+        """Фильтрация логов в зависимости от прав пользователя"""
+        queryset = MailingLog.objects.select_related(
+            'mailing', 'recipient', 'mailing__message'
+        ).order_by('-attempt_time')
+
+        # Если пользователь не менеджер - показываем только свои рассылки
+        if not self.request.user.has_perm('mailing.can_view_all_mailings'):
+            queryset = queryset.filter(mailing__owner=self.request.user)
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['is_manager'] = self.request.user.has_perm('mailing.can_view_all_mailings')
+        return context
