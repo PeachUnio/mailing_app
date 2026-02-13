@@ -8,11 +8,11 @@ from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
-from django.views.generic import CreateView, FormView, ListView, View
+from django.views.generic import CreateView, FormView, ListView, View, DetailView, UpdateView
 
 from config.settings import EMAIL_HOST_USER
 
-from .forms import PasswordResetConfirmForm, PasswordResetRequestForm, UserRegisterForm
+from .forms import PasswordResetConfirmForm, PasswordResetRequestForm, UserRegisterForm, UserUpdateForm
 from .models import User
 
 
@@ -132,3 +132,22 @@ class ToggleUserActiveView(LoginRequiredMixin, PermissionRequiredMixin, View):
         messages.success(request, f"Пользователь {user.email} {action}")
 
         return redirect("users:user_list")
+
+
+class ProfileView(DetailView):
+    model = User
+    template_name = "user_detail.html"
+
+
+class ProfileUpdateView(UpdateView):
+    model = User
+    from_class = UserUpdateForm
+    fields = ['first_name', 'last_name', 'avatar', 'phone', 'country']
+    template_name = "profile_update.html"
+    success_url = reverse_lazy("users:profile")
+
+    def get_object(self):
+        return self.request.user
+
+    def get_success_url(self):
+        return reverse_lazy("users:profile", kwargs={'pk': self.object.pk})

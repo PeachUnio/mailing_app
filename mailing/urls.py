@@ -27,4 +27,6 @@ urlpatterns = [
     path("recipients/create/", views.RecipientCreateView.as_view(), name="recipient_create"),
     path("recipients/<int:pk>/update/", views.RecipientUpdateView.as_view(), name="recipient_update"),
     path("recipients/<int:pk>/delete/", views.RecipientDeleteView.as_view(), name="recipient_delete"),
+    # Логи
+    path("logs/", views.MailingLogListView.as_view(), name="mailing_logs"),
 ]

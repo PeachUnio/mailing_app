@@ -15,6 +15,14 @@
                 <a class="nav-link" href="{% url 'mailing:mailing_list' %}">Рассылки</a>
                 <a class="nav-link" href="{% url 'mailing:message_list' %}">Сообщения</a>
                 <a class="nav-link" href="{% url 'mailing:recipient_list' %}">Получатели</a>
+                <a class="nav-link" href="{% url 'mailing:mailing_logs' %}">
+                    {% if perms.mailing.can_view_all_mailings %}
+                    Все попытки
+                    {% else %}
+                    Мои попытки
+                    {% endif %}
+                </a>
+                <a class="nav-link" href="{% url 'users:profile' pk=user.id %}">Моя страница</a>
                 {% if perms.mailing.can_view_all_mailings %}
                 <a class="nav-link" href="{% url 'users:user_list' %}">Пользователи</a>
                 {% endif %}

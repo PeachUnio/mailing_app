@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% load my_tags %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Профиль пользователя</h1>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    {% if object.avatar %}
+                        <img src="{{ object.avatar|media_filter }}"
+                             class="rounded-circle mb-3"
+                             width="150" height="150">
+                    {% else %}
+                        <div class="bg-secondary rounded-circle d-inline-block mb-3"
+                             style="width: 150px; height: 150px; line-height: 150px;">
+                            <span class="text-white">{{ object.email|first|upper }}</span>
+                        </div>
+                    {% endif %}
+
+                    <h4>{{ object.email }}</h4>
+
+                    <div class="mt-3">
+                        {% if object.is_active %}
+                            <span class="badge bg-success">Активен</span>
+                        {% else %}
+                            <span class="badge bg-danger">Заблокирован</span>
+                        {% endif %}
+
+                        {% if object.is_verified %}
+                            <span class="badge bg-info ms-1">Подтверждён</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Детальная информация</h5>
+
+                    <table class="table">
+                        <tr>
+                            <th width="30%">Email:</th>
+                            <td>{{ object.email }}</td>
+                        </tr>
+                        <tr>
+                            <th>Имя:</th>
+                            <td>
+                                {% if object.first_name or object.last_name %}
+                                    {{ object.first_name }} {{ object.last_name }}
+                                {% else %}
+                                    <span class="text-muted">Не указано</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Телефон:</th>
+                            <td>{{ object.phone|default:"Не указан" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Страна:</th>
+                            <td>{{ object.country|default:"Не указана" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Дата регистрации:</th>
+                            <td>{{ object.date_joined|date:"d.m.Y H:i" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Последний вход:</th>
+                            <td>{{ object.last_login|date:"d.m.Y H:i"|default:"Никогда" }}</td>
+                        </tr>
+                    </table>
+
+                    <h6 class="mt-4">Статистика:</h6>
+                    <div class="row">
+                        <div class="col">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5>{{ object.mailings.count }}</h5>
+                                    <small class="text-muted">Рассылок</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5>{{ object.message_set.count }}</h5>
+                                    <small class="text-muted">Сообщений</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5>{{ object.mailingrecipient_set.count }}</h5>
+                                    <small class="text-muted">Получателей</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        {% if user.is_superuser or perms.mailing.can_view_all_mailings %}
+        <a href="{% url 'users:user_list' %}" class="btn btn-secondary">Назад к списку</a>
+        {% endif %}
+
+        {% if user == object %}
+        <a href="{% url 'users:profile_update' object.pk %}" class="btn btn-warning">Редактировать профиль</a>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

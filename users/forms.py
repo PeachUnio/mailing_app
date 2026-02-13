@@ -22,7 +22,32 @@ class StyleFormMixin:
 class UserRegisterForm(StyleFormMixin, UserCreationForm):
     class Meta:
         model = User
-        fields = ("email", "password1", "password2")
+        fields = ("email", "avatar", "phone", "country", "password1", "password2")
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+
+            # Настройка виджетов для кастомных полей
+            self.fields['avatar'].widget = forms.ClearableFileInput(attrs={
+                'class': 'form-control'
+            })
+            self.fields['avatar'].required = False
+
+            self.fields['phone'].widget = forms.TextInput(attrs={
+                'class': 'form-control'
+            })
+            self.fields['phone'].required = False
+
+            self.fields['country'].widget = forms.TextInput(attrs={
+                'class': 'form-control'
+            })
+            self.fields['country'].required = False
+
+            # Убедитесь, что email тоже правильно настроен
+            self.fields['email'].widget = forms.EmailInput(attrs={
+                'class': 'form-control',
+                'autofocus': True
+            })
 
 
 class PasswordResetRequestForm(forms.Form):
@@ -43,3 +68,24 @@ class PasswordResetConfirmForm(SetPasswordForm):
 
         for field in self.fields.values():
             field.widget.attrs.update({"class": "form-control"})
+
+
+class UserUpdateForm(forms.ModelForm):
+    """Форма для редактирования профиля (без паролей!)"""
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'avatar', 'phone', 'country']
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'country': forms.TextInput(attrs={'class': 'form-control'}),
+            'avatar': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+        }
+        labels = {
+            'first_name': 'Имя',
+            'last_name': 'Фамилия',
+            'avatar': 'Аватар',
+            'phone': 'Телефон',
+            'country': 'Страна',
+        }
