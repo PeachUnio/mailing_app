@@ -11,7 +11,7 @@ from .forms import MailingForm, MailingModerForm, MessageForm, RecipientForm
 from .models import Mailing, MailingLog, MailingRecipient, Message
 
 
-class HomeView(TemplateView):
+class HomeView(LoginRequiredMixin, TemplateView):
     template_name = "mailing/home.html"
 
     def get_context_data(self, **kwargs):
@@ -64,17 +64,21 @@ class HomeView(TemplateView):
         return context
 
 
-class MailingListView(ListView):
+class MailingListView(LoginRequiredMixin, ListView):
     model = Mailing
     template_name = "mailing/mailing_list.html"
     context_object_name = "mailings"
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = Mailing.objects.select_related('message', 'owner').prefetch_related('recipients')
 
         for mailing in queryset:
             mailing.update_status()
-        return queryset
+
+        if self.request.user.has_perm('mailing.can_view_all_mailings'):
+            return queryset
+        else:
+            return queryset.filter(owner=self.request.user)
 
 
 class MailingCreateView(CreateView):
@@ -134,7 +138,7 @@ class MailingDeleteView(DeleteView):
         return super().delete(request, *args, **kwargs)
 
 
-class MailingDetailView(DetailView):
+class MailingDetailView(LoginRequiredMixin, DetailView):
     model = Mailing
     template_name = "mailing/mailing_detail.html"
     context_object_name = "mailing"
@@ -142,6 +146,9 @@ class MailingDetailView(DetailView):
     def get_object(self, queryset=None):
         obj = super().get_object(queryset)
         obj.update_status()
+        if not (obj.owner == self.request.user or
+                self.request.user.has_perm('mailing.can_view_all_mailings')):
+            raise PermissionDenied("У вас нет прав для просмотра этой рассылки")
         return obj
 
     def get_context_data(self, **kwargs):
@@ -152,8 +159,33 @@ class MailingDetailView(DetailView):
         context["success_count"] = logs.filter(status="success").count()
         context["failed_count"] = logs.filter(status="failed").count()
         context["logs"] = logs.order_by("-attempt_time")[:20]
+        context["is_owner"] = (mailing.owner == self.request.user)
 
         return context
+
+    class MailingDetailView(LoginRequiredMixin, DetailView):
+        model = Mailing
+        template_name = "mailing/mailing_detail.html"
+        context_object_name = "mailing"
+
+        def get_object(self, queryset=None):
+            # Получаем объект стандартным способом
+            obj = super().get_object(queryset)
+
+            # Проверяем права доступа
+            if not (obj.owner == self.request.user or
+                    self.request.user.has_perm('mailing.can_view_all_mailings')):
+                raise PermissionDenied("У вас нет прав для просмотра этой рассылки")
+
+            return obj
+
+        def get_context_data(self, **kwargs):
+            context = super().get_context_data(**kwargs)
+            # Добавляем дополнительные данные, если нужно
+            context['logs'] = MailingLog.objects.filter(
+                mailing=self.object
+            ).select_related('recipient').order_by('-attempt_time')[:10]
+            return context
 
 
 def send_mailing_now(request, pk):
@@ -173,9 +205,15 @@ def send_mailing_now(request, pk):
     return redirect("mailing_detail", pk=pk)
 
 
-class MessageListView(ListView):
+class MessageListView(LoginRequiredMixin, ListView):
     model = Message
     template_name = "mailing/message_list.html"
+
+    def get_queryset(self):
+        if self.request.user.has_perm('mailing.can_view_all_messages'):
+            return Message.objects.all().select_related('owner')
+        else:
+            return Message.objects.filter(owner=self.request.user)
 
 
 class MessageCreateView(CreateView):
@@ -205,10 +243,16 @@ class MessageDeleteView(DeleteView):
     success_url = reverse_lazy("mailing:message_list")
 
 
-class RecipientListView(ListView):
+class RecipientListView(LoginRequiredMixin, ListView):
     model = MailingRecipient
     template_name = "mailing/recipient_list.html"
     context_object_name = "recipients"
+
+    def get_queryset(self):
+        if self.request.user.has_perm('mailing.can_view_all_recipients'):
+            return MailingRecipient.objects.all().select_related('owner')
+        else:
+            return MailingRecipient.objects.filter(owner=self.request.user)
 
 
 class RecipientCreateView(CreateView):
@@ -249,7 +293,6 @@ class MailingLogListView(LoginRequiredMixin, ListView):
             'mailing', 'recipient', 'mailing__message'
         ).order_by('-attempt_time')
 
-        # Если пользователь не менеджер - показываем только свои рассылки
         if not self.request.user.has_perm('mailing.can_view_all_mailings'):
             queryset = queryset.filter(mailing__owner=self.request.user)
 
