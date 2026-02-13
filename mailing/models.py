@@ -30,6 +30,9 @@ class MailingRecipient(models.Model):
     class Meta:
         verbose_name = "Получатель"
         verbose_name_plural = "Получатели"
+        permissions = [
+            ("can_view_all_recipients", "Может просматривать всех получателей"),
+        ]
 
 
 class Message(models.Model):
@@ -45,6 +48,9 @@ class Message(models.Model):
     class Meta:
         verbose_name = "Письмо"
         verbose_name_plural = "Письма"
+        permissions = [
+            ("can_view_all_messages", "Может просматривать все сообщения"),
+        ]
 
 
 class Mailing(models.Model):
