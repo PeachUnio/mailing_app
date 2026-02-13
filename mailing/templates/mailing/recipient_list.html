@@ -23,7 +23,7 @@
             </thead>
             <tbody>
                 {% for recipient in object_list %}
-                    {% if perms.mailing.can_view_all_mailings or user == recipient.owner %}
+                    {% if perms.mailing.can_view_all_recipients or user == recipient.owner %}
                     <tr>
                         <td>{{ recipient.id }}</td>
                         <td>{{ recipient.name }}</td>

@@ -21,7 +21,7 @@
             </thead>
             <tbody>
                 {% for message in object_list %}
-                    {% if perms.mailing.can_view_all_mailings or user == message.owner %}
+                    {% if perms.mailing.can_view_all_messages or user == message.owner %}
                     <tr>
                         <td>{{ message.id }}</td>
                         <td><strong>{{ message.letter_theme }}</strong></td>
